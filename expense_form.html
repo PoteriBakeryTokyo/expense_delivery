@@ -461,12 +461,14 @@
   let photoFile = null;
   let photoDataUrl = null;
 
-  // --- 日付デフォルト（今日） ---
+  // --- 日付デフォルト（今日） + 給油デフォルト選択 ---
   (function() {
     const d = new Date();
     const pad = n => String(n).padStart(2, '0');
     document.getElementById('dateInput').value =
       `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const kyuyuBtn = document.querySelector('.purpose-btn[data-purpose="給油"]');
+    if (kyuyuBtn) { kyuyuBtn.classList.add('selected'); selectedPurpose = '給油'; }
   })();
 
   // --- 名前選択 ---
