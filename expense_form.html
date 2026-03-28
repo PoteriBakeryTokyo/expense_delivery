@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>経費精算入力</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e0e0dc;
+    --text: #1a1a18;
+    --muted: #9a9a94;
+    --accent: #1a1a18;
+    --accent-light: #f0f0ec;
+    --selected-bg: #1a1a18;
+    --selected-text: #ffffff;
+    --danger: #c0392b;
+    --radius: 10px;
+    --gap: 20px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 60px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 28px;
+  }
+
+  header h1 {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  header p {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-top: 4px;
+    color: var(--text);
+  }
+
+  .form {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+  }
+
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 16px 8px;
+  }
+
+  /* 名前グリッド */
+  .name-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+  }
+
+  .name-btn {
+    background: var(--surface);
+    border: none;
+    padding: 14px 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .name-btn:active { opacity: 0.7; }
+
+  .name-btn.selected {
+    background: var(--selected-bg);
+    color: var(--selected-text);
+  }
+
+  /* 日付 */
+  .date-wrap {
+    padding: 4px 16px 14px;
+  }
+
+  input[type="date"] {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text);
+    padding: 4px 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.4;
+    cursor: pointer;
+  }
+
+  /* 使途 */
+  .purpose-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+  }
+
+  .purpose-btn {
+    background: var(--surface);
+    border: none;
+    padding: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    text-align: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .purpose-btn:active { opacity: 0.7; }
+
+  .purpose-btn.selected {
+    background: var(--selected-bg);
+    color: var(--selected-text);
+  }
+
+  .other-input-wrap {
+    padding: 0 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, padding 0.2s ease;
+  }
+
+  .other-input-wrap.visible {
+    max-height: 80px;
+    padding: 12px 16px 14px;
+  }
+
+  .other-input-wrap input[type="text"] {
+    width: 100%;
+    background: var(--accent-light);
+    border: none;
+    border-radius: 6px;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    padding: 10px 12px;
+  }
+
+  .other-input-wrap input[type="text"]::placeholder {
+    color: var(--muted);
+  }
+
+  /* 金額 */
+  .amount-wrap {
+    padding: 4px 16px 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .amount-wrap input[type="number"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text);
+    padding: 4px 0;
+    -moz-appearance: textfield;
+    appearance: textfield;
+    min-width: 0;
+  }
+
+  .amount-wrap input[type="number"]::-webkit-inner-spin-button,
+  .amount-wrap input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+
+  .amount-wrap input[type="number"]::placeholder {
+    color: var(--border);
+  }
+
+  .amount-unit {
+    font-size: 15px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* 写真 */
+  .photo-area {
+    padding: 4px 16px 14px;
+  }
+
+  .photo-upload-btn {
+    width: 100%;
+    background: var(--accent-light);
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .photo-upload-btn:active { background: #e8e8e4; }
+
+  .photo-upload-btn svg {
+    opacity: 0.35;
+  }
+
+  .photo-upload-btn span {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  #photo-input {
+    display: none;
+  }
+
+  .photo-preview-wrap {
+    display: none;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .photo-preview-wrap.has-photo {
+    display: block;
+  }
+
+  #photo-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+  }
+
+  .photo-remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: rgba(0,0,0,0.55);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 送信ボタン */
+  .submit-btn {
+    width: 100%;
+    max-width: 420px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 17px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .submit-btn:active { opacity: 0.75; }
+  .submit-btn:disabled { opacity: 0.3; cursor: default; }
+
+  /* トースト */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    white-space: nowrap;
+    z-index: 100;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* エラー */
+  .error-msg {
+    font-size: 11px;
+    color: var(--danger);
+    padding: 6px 16px 12px;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  .section.error-section {
+    border-color: var(--danger);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Expense</h1>
+  <p>経費精算入力</p>
+</header>
+
+<div class="form" id="expenseForm">
+
+  <!-- 名前 -->
+  <div class="section" id="sec-name">
+    <div class="section-label">名前</div>
+    <div class="name-grid" id="nameGrid">
+      <button class="name-btn" data-name="雨宮優" onclick="selectName(this)">雨宮 優</button>
+      <button class="name-btn" data-name="荒金亮太" onclick="selectName(this)">荒金 亮太</button>
+      <button class="name-btn" data-name="坂本路裕" onclick="selectName(this)">坂本 路裕</button>
+      <button class="name-btn" data-name="高橋洋毅" onclick="selectName(this)">高橋 洋毅</button>
+      <button class="name-btn" data-name="長谷川隆裕" onclick="selectName(this)">長谷川 隆裕</button>
+      <button class="name-btn" data-name="村上公章" onclick="selectName(this)">村上 公章</button>
+    </div>
+    <div class="error-msg" id="err-name">名前を選択してください</div>
+  </div>
+
+  <!-- 日付 -->
+  <div class="section" id="sec-date">
+    <div class="section-label">日付</div>
+    <div class="date-wrap">
+      <input type="date" id="dateInput">
+    </div>
+  </div>
+
+  <!-- 使途 -->
+  <div class="section" id="sec-purpose">
+    <div class="section-label">使途</div>
+    <div class="purpose-toggle">
+      <button class="purpose-btn" data-purpose="給油" onclick="selectPurpose(this)">⛽ 給油</button>
+      <button class="purpose-btn" data-purpose="その他" onclick="selectPurpose(this)">その他</button>
+    </div>
+    <div class="other-input-wrap" id="otherWrap">
+      <input type="text" id="otherText" placeholder="内容を入力…" maxlength="100">
+    </div>
+    <div class="error-msg" id="err-purpose">使途を選択してください</div>
+  </div>
+
+  <!-- 金額 -->
+  <div class="section" id="sec-amount">
+    <div class="section-label">金額</div>
+    <div class="amount-wrap">
+      <input type="number" id="amountInput" placeholder="0" min="0" inputmode="numeric">
+      <span class="amount-unit">円</span>
+    </div>
+    <div class="error-msg" id="err-amount">金額を入力してください</div>
+  </div>
+
+  <!-- 写真 -->
+  <div class="section">
+    <div class="section-label">写真（任意）</div>
+    <div class="photo-area">
+      <label class="photo-upload-btn" id="photoUploadBtn" for="photo-input">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="6" width="18" height="14" rx="2"/>
+          <circle cx="12" cy="13" r="3"/>
+          <path d="M8 6l1.5-3h5L16 6"/>
+        </svg>
+        <span>タップして写真を追加</span>
+      </label>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="handlePhoto(this)">
+      <div class="photo-preview-wrap" id="previewWrap">
+        <img id="photo-preview" alt="preview">
+        <button class="photo-remove-btn" onclick="removePhoto()" title="削除">✕</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<br>
+
+<button class="submit-btn" id="submitBtn" onclick="submitForm()">送信する</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // --- 状態 ---
+  let selectedName = '';
+  let selectedPurpose = '';
+  let photoFile = null;
+  let photoDataUrl = null;
+
+  // --- 日付デフォルト（今日） ---
+  (function() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('dateInput').value =
+      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  })();
+
+  // --- 名前選択 ---
+  function selectName(btn) {
+    document.querySelectorAll('.name-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedName = btn.dataset.name;
+    clearError('sec-name', 'err-name');
+  }
+
+  // --- 使途選択 ---
+  function selectPurpose(btn) {
+    document.querySelectorAll('.purpose-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedPurpose = btn.dataset.purpose;
+    const wrap = document.getElementById('otherWrap');
+    if (selectedPurpose === 'その他') {
+      wrap.classList.add('visible');
+      setTimeout(() => document.getElementById('otherText').focus(), 250);
+    } else {
+      wrap.classList.remove('visible');
+    }
+    clearError('sec-purpose', 'err-purpose');
+  }
+
+  // --- 写真 ---
+  function handlePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    photoFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      photoDataUrl = e.target.result;
+      document.getElementById('photo-preview').src = photoDataUrl;
+      document.getElementById('previewWrap').classList.add('has-photo');
+      document.getElementById('photoUploadBtn').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removePhoto() {
+    photoFile = null;
+    photoDataUrl = null;
+    document.getElementById('photo-input').value = '';
+    document.getElementById('previewWrap').classList.remove('has-photo');
+    document.getElementById('photo-preview').src = '';
+    document.getElementById('photoUploadBtn').style.display = '';
+  }
+
+  // --- バリデーション ---
+  function validate() {
+    let ok = true;
+    if (!selectedName) {
+      showError('sec-name', 'err-name'); ok = false;
+    }
+    if (!selectedPurpose) {
+      showError('sec-purpose', 'err-purpose'); ok = false;
+    }
+    if (selectedPurpose === 'その他' && !document.getElementById('otherText').value.trim()) {
+      showError('sec-purpose', 'err-purpose');
+      document.getElementById('err-purpose').textContent = '使途の内容を入力してください';
+      ok = false;
+    }
+    const amt = document.getElementById('amountInput').value;
+    if (!amt || Number(amt) <= 0) {
+      showError('sec-amount', 'err-amount'); ok = false;
+    }
+    return ok;
+  }
+
+  function showError(secId, errId) {
+    document.getElementById(secId).classList.add('error-section');
+    document.getElementById(errId).classList.add('visible');
+  }
+
+  function clearError(secId, errId) {
+    document.getElementById(secId).classList.remove('error-section');
+    document.getElementById(errId).classList.remove('visible');
+  }
+
+  // --- 日付フォーマット ---
+  function formatDateJP(value) {
+    return value.replace(/-/g, '/');
+  }
+
+  function formatDateForFilename(value) {
+    return value.replace(/-/g, '');
+  }
+
+  // --- 使途テキスト ---
+  function getPurposeText() {
+    if (selectedPurpose === 'その他') {
+      const t = document.getElementById('otherText').value.trim();
+      return `その他（${t}）`;
+    }
+    return selectedPurpose;
+  }
+
+  // --- 写真ファイル名（日付_名前_送信時刻HHmmss） ---
+  function getPhotoFilename() {
+    if (!photoFile) return '';
+    const dateVal = document.getElementById('dateInput').value;
+    const datePart = formatDateForFilename(dateVal);
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const timePart = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const ext = photoFile.name.split('.').pop().toLowerCase() || 'jpg';
+    return `${datePart}_${selectedName}_${timePart}.${ext}`;
+  }
+
+  // ============================================================
+  //  【要設定】GASデプロイ後にURLをここへ貼り付け
+  // ============================================================
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxFJZwkLCg30biKTlBx_UERZBQNgyi1YAl2o_4IAzV4AW3JOAUAV5zeBMxLuPPEXCPu/exec';
+
+  // --- 送信 ---
+  async function submitForm() {
+    if (!validate()) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '送信中…';
+
+    try {
+      const dateVal  = document.getElementById('dateInput').value;
+      const timestamp = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+      const amount   = document.getElementById('amountInput').value;
+
+      const payload = {
+        タイムスタンプ: timestamp,
+        名前:          selectedName,
+        日付:          formatDateJP(dateVal),
+        使途:          getPurposeText(),
+        金額:          Number(amount),
+        写真ファイル名: getPhotoFilename(),
+        photoFilename: getPhotoFilename(),
+        photoBase64:   photoDataUrl || ''
+      };
+
+      const res = await fetch(GAS_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' }, // GASのdoPostはtext/plainで受け取る
+        body:    JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (result.status === 'ok') {
+        showToast('送信しました ✓');
+        resetForm();
+      } else {
+        throw new Error(result.message || '送信に失敗しました');
+      }
+
+    } catch (err) {
+      console.error(err);
+      showToast('エラー: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '送信する';
+    }
+  }
+
+  // --- リセット ---
+  function resetForm() {
+    selectedName = '';
+    selectedPurpose = '';
+    document.querySelectorAll('.name-btn, .purpose-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('otherWrap').classList.remove('visible');
+    document.getElementById('otherText').value = '';
+    document.getElementById('amountInput').value = '';
+    removePhoto();
+
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('dateInput').value =
+      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    ['sec-name','sec-purpose','sec-amount'].forEach(id => {
+      document.getElementById(id).classList.remove('error-section');
+    });
+    ['err-name','err-purpose','err-amount'].forEach(id => {
+      document.getElementById(id).classList.remove('visible');
+    });
+  }
+
+  // --- トースト ---
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>
